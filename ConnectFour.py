@@ -50,6 +50,12 @@ class ConnectFour:
             self.board.set_callback(col, 0, self.handle_button_event) # Example of how to register a callback (function) for button 0, 0. Must be done for every button that runs a function
             self.board.activate_key(col, 0, Action.BUTTON_PRESSED) # Even though the callback is set, if the key is not enabled it will not be run. This is how you enable
   
+    def current_color(self):
+        if self.current_player == 1:
+            return RED
+        else:
+            return BLUE
+
     def handle_button_event(self, x: int, y: int, action: Action):
         """
         This is an example of how a callback function will look. It takes an x value, y value, and action, which will indicate what button activated the callback and what action the user did to run it.
@@ -74,10 +80,7 @@ class ConnectFour:
             if self.is_board_full() or len(result) > 0:
                 self.game_ended = True
 
-                if self.current_player == 1:
-                    color = RED
-                else:
-                    color = BLUE
+                color = self.current_color()
 
                 if len(result) > 0:
                     self.top_row(color)
@@ -116,21 +119,27 @@ class ConnectFour:
         self.game_state[row][col] = self.current_player
         self.column_heights[col] += 1
         self.num_placed += 1
-        if self.current_player == 1:
-            self.board.set_cell_color(col, row + 2, RED) # turns the color of the latest placed square to red for player 1
+
+        color = self.current_color()
+
+        y = 0
+        while y <= row:
+            self.board.set_cell_color(col, y + 1, OFF)
+            self.board.set_cell_color(col, y + 2, color)
             self.board.update_display()
-        if self.current_player == 2:
-            self.board.set_cell_color(col, row + 2, BLUE) # turns the color of the latest placed square to blue for player 2
-            self.board.update_display()
+            sleep(0.05)
+            y += 1
+
+        self.board.clear_keypad_buffer()
+
         return self.check_win(col, row)
 
     def switch_player(self):
         if self.current_player == 1:
             self.current_player = 2
-            self.top_row(BLUE)
         else:
             self.current_player = 1
-            self.top_row(RED)
+        self.top_row(self.current_color())
 
     def show_current_player(self):
         #TODO: Function to indicate on the board which player is currently placing a piece
