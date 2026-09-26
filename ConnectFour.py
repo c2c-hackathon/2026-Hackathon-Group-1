@@ -38,6 +38,7 @@ class ConnectFour:
             for row in range(2, 2 + self.height):
                 self.board.set_cell_color(col, row, OFF)
         self.board.update_display()
+        self.animating = False
 
     def top_row(self, color):
         for col in range(self.width):
@@ -56,7 +57,7 @@ class ConnectFour:
         See NeoTrellisGame.set_callback() for info about callbacks.
         """
         #TODO: Implement what will happen when the button at position x,y is pressed or released
-        if Action.BUTTON_PRESSED:
+        if Action.BUTTON_PRESSED and not self.animating:
             if self.game_ended:
                 if x == self.width - 1:
                     self.reset_game()
@@ -92,6 +93,7 @@ class ConnectFour:
                 self.board.set_cell_color(7, 0, GREEN)
                 self.board.update_display()
 
+                self.animating = True
                 for i in range(21):
                     for row in result:
                         for j in range(row.num_cells):
@@ -102,6 +104,7 @@ class ConnectFour:
                             )
                     self.board.update_display()
                     sleep(0.05)
+                self.animating = False
 
     # Returns -1 if row is full.
     def find_lowest_empty_row(self, col: int):
