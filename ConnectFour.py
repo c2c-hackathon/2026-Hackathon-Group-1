@@ -8,7 +8,13 @@ class ConnectFour:
     def __init__(self, board: typing.Optional[AbstractNeoTrellisGame] = None):
         self.board = board if board is not None else NeoTrellisGame()
         super().__init__()
-        self.game_state = [] #TODO: Choose a structure to represent what pieces are currently in the game board
+        self.width = 8
+        self.height = 6 # 8x6 board
+        self.game_state = [] # multi-dimensional list
+        for i in range(self.height):
+            self.game_state = [0] * self.width 
+        self.num_placed = 0
+        self.current_player = 1
 
     def reset_game(self):
         #TODO reset the game state to its original empty state
@@ -62,7 +68,7 @@ class ConnectFour:
         #TODO: Return if the given column is currently full
         pass
 
-    def check_win(self):
+    def check_win(self, x: int, y: int) -> bool:
         #TODO: Check the game state to see if any player has won or if there is a draw
         pass
 
