@@ -118,6 +118,7 @@ class ConnectFour:
                 counterNegativeDirection += 1
 
                 # Same logic as earlier check, but subtract one since the center tile is counted twice
+                # Checks for if the most recently placed tile is in the middle of the winning match
                 if counterPositiveDirection + counterNegativeDirection - 1 >= 4:
                     return True
         
@@ -128,6 +129,10 @@ class ConnectFour:
 
     def show_winner(self):
         #TODO: Display on the board who won
+        #if counterPositiveDirection >= 4:
+        #if self.current_player == 1:
+        #    winner = 'Player 1'
+        #    print(winner)
         pass
 
     def show_tie_game(self):
