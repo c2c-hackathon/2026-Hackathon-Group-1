@@ -38,18 +38,21 @@ class ConnectFour:
         """
         #TODO: Implement what will happen when the button at position x,y is pressed or released
         if Action.BUTTON_PRESSED:
-            if self.place_piece(x):
+            result = self.place_piece(x)
+            if result == 1:
                 self.switch_player()
+            if result == 2:
+                print(f"Player {self.current_player} has won.")
 
     # Returns -1 if row is full.
     def find_lowest_empty_row(self, col: int):
         return self.height - self.column_heights[col] - 1
 
-    # False if failure, true if success
+    # 0 if failure, 1 if success, 2 if win
     def place_piece(self, col: int):
         row = self.find_lowest_empty_row(col)
         if row == -1:
-            return False
+            return 0
         self.game_state[row][col] = self.current_player
         self.column_heights[col] += 1
         self.num_placed += 1
@@ -59,7 +62,9 @@ class ConnectFour:
         if self.current_player == 2:
             self.board.set_cell_color(col, row + 2, BLUE) # turns the color of the latest placed square to blue for player 2
             self.board.update_display()
-        return True
+        if self.check_win(col, row):
+            return 2
+        return 1
 
     def switch_player(self):
         if self.current_player == 1:
@@ -92,7 +97,6 @@ class ConnectFour:
 
             # Bookkeeping variable: how many of the same color in this direction?
             counterPositiveDirection = 1
-
             # Go in one direction until it either goes out of the board or hits a non-self tile
             while True:
                 curX += direction[0]
@@ -113,6 +117,9 @@ class ConnectFour:
                 if counterPositiveDirection >= 4:
                     return True
             
+            curX = x
+            curY = y
+
             # Go the other way
             counterNegativeDirection = 1
             while True:
