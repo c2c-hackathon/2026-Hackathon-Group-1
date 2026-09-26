@@ -4,6 +4,16 @@ from NeoTrellisGame import NeoTrellisGame, AbstractNeoTrellisGame, Action
 from adafruit_neotrellis.multitrellis import MultiTrellis
 from adafruit_neotrellis.neotrellis import NeoTrellis
 from Colors import RED, GREEN, BLUE, WHITE, OFF
+from dataclasses import dataclass
+from time import sleep
+
+@dataclass
+class WinningRow:
+    startX: int
+    startY: int
+    stepX: int
+    stepY: int
+    num_cells: int
 
 class ConnectFour:
     def __init__(self, board: typing.Optional[AbstractNeoTrellisGame] = None):
@@ -53,16 +63,24 @@ class ConnectFour:
                 return
             
             result = self.place_piece(x)
-            if result == 1:
+            if result is None:
+                return
+            
+            # No win
+            if len(result) == 0:
                 self.switch_player()
             
-            if self.is_board_full() or result == 2:
+            # Draw or win
+            if self.is_board_full() or len(result) > 0:
                 self.game_ended = True
-                if result == 2:
-                    if self.current_player == 1:
-                        self.top_row(RED)
-                    else:
-                        self.top_row(BLUE)
+
+                if self.current_player == 1:
+                    color = RED
+                else:
+                    color = BLUE
+
+                if len(result) > 0:
+                    self.top_row(color)
                 else:
                     col = 0
                     while col < 6:
@@ -74,15 +92,26 @@ class ConnectFour:
                 self.board.set_cell_color(7, 0, GREEN)
                 self.board.update_display()
 
+                for i in range(21):
+                    for row in result:
+                        for j in range(row.num_cells):
+                            self.board.set_cell_color(
+                                row.startX + j * row.stepX,
+                                row.startY + j * row.stepY + 2,
+                                color if i % 2 == 0 else OFF
+                            )
+                    self.board.update_display()
+                    sleep(0.05)
+
     # Returns -1 if row is full.
     def find_lowest_empty_row(self, col: int):
         return self.height - self.column_heights[col] - 1
 
-    # 0 if failure, 1 if success, 2 if win
+    # None if failure, empty array if success, array containing win information if win
     def place_piece(self, col: int):
         row = self.find_lowest_empty_row(col)
         if row == -1:
-            return 0
+            return None
         self.game_state[row][col] = self.current_player
         self.column_heights[col] += 1
         self.num_placed += 1
@@ -92,9 +121,7 @@ class ConnectFour:
         if self.current_player == 2:
             self.board.set_cell_color(col, row + 2, BLUE) # turns the color of the latest placed square to blue for player 2
             self.board.update_display()
-        if self.check_win(col, row):
-            return 2
-        return 1
+        return self.check_win(col, row)
 
     def switch_player(self):
         if self.current_player == 1:
@@ -115,20 +142,23 @@ class ConnectFour:
         #TODO: Return the color for the given player 
         pass
 
-    def check_win(self, x: int, y: int) -> bool:
+    def check_win(self, x: int, y: int):
         directions = [
             [0, 1],
             [1, 0],
             [1, 1],
             [1, -1]
         ]
-        ourColor = self.game_state[y][x]
+        our_color = self.game_state[y][x]
+        out = []
         for direction in directions:
+            # Current X and Y
             curX = x
             curY = y
 
-            # Bookkeeping variable: how many of the same color in this direction?
-            counterPositiveDirection = 1
+            # Bookkeeping variable: how many cells in winning row?
+            num_cells = 1
+
             # Go in one direction until it either goes out of the board or hits a non-self tile
             while True:
                 curX += direction[0]
@@ -139,39 +169,30 @@ class ConnectFour:
                     break
 
                 # Color check
-                if self.game_state[curY][curX] != ourColor:
+                if self.game_state[curY][curX] != our_color:
                     break
 
                 # Increase bookkeeping variable
-                counterPositiveDirection += 1
-
-                # If 4 or more in this direction, we need not bother checking more
-                if counterPositiveDirection >= 4:
-                    return True
+                num_cells += 1
             
             curX = x
             curY = y
 
             # Go the other way
-            counterNegativeDirection = 1
             while True:
                 curX -= direction[0]
                 curY -= direction[1]
 
-                if curX < 0 or curX >= self.width or curY < 0 or curY >= self.height:
+                if curX < 0 or curX >= self.width or curY < 0 or curY >= self.height or self.game_state[curY][curX] != our_color:
+                    curX += direction[0]
+                    curY += direction[1]
                     break
 
-                if self.game_state[curY][curX] != ourColor:
-                    break
+                num_cells += 1
 
-                counterNegativeDirection += 1
-
-                # Same logic as earlier check, but subtract one since the center tile is counted twice
-                # Checks for if the most recently placed tile is in the middle of the winning match
-                if counterPositiveDirection + counterNegativeDirection - 1 >= 4:
-                    return True
-        
-        # If no direction won, then return failure
-        return False
+            if num_cells >= 4:
+                out.append(WinningRow(curX, curY, direction[0], direction[1], num_cells))
+            
+        return out
 
 
