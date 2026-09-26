@@ -3,6 +3,7 @@ import typing
 from NeoTrellisGame import NeoTrellisGame, AbstractNeoTrellisGame, Action
 from adafruit_neotrellis.multitrellis import MultiTrellis
 from adafruit_neotrellis.neotrellis import NeoTrellis
+from Colors import RED, BLUE
 
 class ConnectFour:
     def __init__(self, board: typing.Optional[AbstractNeoTrellisGame] = None):
@@ -50,14 +51,10 @@ class ConnectFour:
         self.column_heights[col] += 1
         self.num_placed += 1
         if self.current_player == 1:
-            set_cell_color(self, col, row, (255, 40 , 40)) # turns the color of the latest placed square to red for player 1
+            set_cell_color(self, col, row, RED) # turns the color of the latest placed square to red for player 1
         if self.current_player == 2:
-            set_cell_color(self, col, row, (40, 40, 255)) # turns the color of the latest placed square to blue for player 2
+            set_cell_color(self, col, row, BLUE) # turns the color of the latest placed square to blue for player 2
         return True
-
-    def update_board_colors(self):
-        #TODO: DON'T NEED THIS, CAN DELETE LATER BECAUSE OF INCORPORATION IN PLACE_PIECE
-        pass
 
     def switch_player(self):
         if self.current_player == 1:
@@ -70,15 +67,10 @@ class ConnectFour:
         pass
 
     def is_board_full(self):
-        #TODO: Return whether or not the game state has no more legal moves
-        pass  
+        return self.num_placed >= self.width * self.height
 
     def get_player_color(self, player) -> tuple[int, int, int]:
         #TODO: Return the color for the given player 
-        pass
-
-    def is_column_full(self, col: int):
-        #TODO: Return if the given column is currently full
         pass
 
     def check_win(self, x: int, y: int) -> bool:
@@ -137,8 +129,6 @@ class ConnectFour:
         
         # If no direction won, then return failure
         return False
-            
-
 
     def show_winner(self):
         #TODO: Display on the board who won
@@ -146,10 +136,6 @@ class ConnectFour:
         #if self.current_player == 1:
         #    winner = 'Player 1'
         #    print(winner)
-        pass
-
-    def show_tie_game(self):
-        #TODO: Display on the board that there was a draw
         pass
 
 
