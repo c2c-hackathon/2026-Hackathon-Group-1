@@ -69,8 +69,62 @@ class ConnectFour:
         pass
 
     def check_win(self, x: int, y: int) -> bool:
-        #TODO: Check the game state to see if any player has won or if there is a draw
-        pass
+        directions = [
+            [0, 1],
+            [1, 0],
+            [1, 1],
+            [1, -1]
+        ]
+        ourColor = self.game_state[y][x]
+        for direction in directions:
+            curX = x
+            curY = y
+
+            # Bookkeeping variable: how many of the same color in this direction?
+            counterPositiveDirection = 1
+
+            # Go in one direction until it either goes out of the board or hits a non-self tile
+            while True:
+                curX += direction[0]
+                curY += direction[1]
+
+                # Out of bounds check
+                if curX < 0 or curX >= self.width or curY < 0 or curY >= self.height:
+                    break
+
+                # Color check
+                if self.game_state[curY][curX] != ourColor:
+                    break
+
+                # Increase bookkeeping variable
+                counterPositiveDirection += 1
+
+                # If 4 or more in this direction, we need not bother checking more
+                if counterPositiveDirection >= 4:
+                    return True
+            
+            # Go the other way
+            counterNegativeDirection = 1
+            while True:
+                curX -= direction[0]
+                curY -= direction[1]
+
+                if curX < 0 or curX >= self.width or curY < 0 or curY >= self.height:
+                    break
+
+                if self.game_state[curY][curX] != ourColor:
+                    break
+
+                counterNegativeDirection += 1
+
+                # Same logic as earlier check, but subtract one since the center tile is counted twice
+                if counterPositiveDirection + counterNegativeDirection - 1 >= 4:
+                    return True
+        
+        # If no direction won, then return failure
+        return False
+            
+
 
     def show_winner(self):
         #TODO: Display on the board who won
