@@ -215,6 +215,7 @@ class ConnectFour:
     # Check win function
     # Returns empty list if no win
     # Returns an list of one or more WinningRow objects if win
+    # The x and y parameters specify the most recent tile placed, so that we don't need to brute-force the entire grid
     def check_win(self, x: int, y: int):
         # Encodes the four directions to check in terms of displacements
         # Horizontal, vertical, two diagonals
