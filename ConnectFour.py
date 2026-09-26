@@ -3,7 +3,7 @@ import typing
 from NeoTrellisGame import NeoTrellisGame, AbstractNeoTrellisGame, Action
 from adafruit_neotrellis.multitrellis import MultiTrellis
 from adafruit_neotrellis.neotrellis import NeoTrellis
-from Colors import RED, BLUE
+from Colors import RED, GREEN, BLUE, WHITE, OFF
 
 class ConnectFour:
     def __init__(self, board: typing.Optional[AbstractNeoTrellisGame] = None):
@@ -12,37 +12,53 @@ class ConnectFour:
         self.width = 8
         self.height = 6 # 8x6 board
         self.game_state = [] # multi-dimensional list
+        self.reset_game()
+        self.register_callbacks()
+
+    def reset_game(self):
+        self.game_state = [] # multi-dimensional list
         for i in range(self.height):
             self.game_state.append([0] * self.width) 
         self.column_heights = [0] * self.width
         self.num_placed = 0
         self.current_player = 1
-        self.register_callbacks()
+        self.game_ended = False
+        self.top_row(RED)
+        for col in range(self.width):
+            for row in range(2, 2 + self.height):
+                self.board.set_cell_color(col, row, OFF)
+        self.board.update_display()
 
-    def reset_game(self):
-        #TODO reset the game state to its original empty state
-        pass
+    def top_row(self, color):
+        for col in range(self.width):
+            self.board.set_cell_color(col, 0, color)
+        self.board.update_display()
 
     def register_callbacks(self):
         #TODO: Register callbacks that will be run when buttons are pressed and released
-        for col in range(8):
+        for col in range(self.width):
             self.board.set_callback(col, 0, self.handle_button_event) # Example of how to register a callback (function) for button 0, 0. Must be done for every button that runs a function
             self.board.activate_key(col, 0, Action.BUTTON_PRESSED) # Even though the callback is set, if the key is not enabled it will not be run. This is how you enable
-
-        pass
   
-    def handle_button_event(self, x:int, y: int, action: Action):
+    def handle_button_event(self, x: int, y: int, action: Action):
         """
         This is an example of how a callback function will look. It takes an x value, y value, and action, which will indicate what button activated the callback and what action the user did to run it.
         See NeoTrellisGame.set_callback() for info about callbacks.
         """
         #TODO: Implement what will happen when the button at position x,y is pressed or released
         if Action.BUTTON_PRESSED:
+            if self.game_ended and x == self.width - 1:
+                self.reset_game()
+                return
+            
             result = self.place_piece(x)
             if result == 1:
                 self.switch_player()
-            if result == 2:
-                print(f"Player {self.current_player} has won.")
+            if self.is_board_full() or result == 2:
+                self.game_ended = True
+                self.top_row(OFF)
+                self.board.set_cell_color(self.width - 1, 0, GREEN)
+                self.board.update_display()
 
     # Returns -1 if row is full.
     def find_lowest_empty_row(self, col: int):
@@ -69,8 +85,10 @@ class ConnectFour:
     def switch_player(self):
         if self.current_player == 1:
             self.current_player = 2
+            self.top_row(BLUE)
         else:
             self.current_player = 1
+            self.top_row(RED)
 
     def show_current_player(self):
         #TODO: Function to indicate on the board which player is currently placing a piece
@@ -141,13 +159,5 @@ class ConnectFour:
         
         # If no direction won, then return failure
         return False
-
-    def show_winner(self):
-        #TODO: Display on the board who won
-        #if counterPositiveDirection >= 4:
-        #if self.current_player == 1:
-        #    winner = 'Player 1'
-        #    print(winner)
-        pass
 
 
