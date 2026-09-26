@@ -6,7 +6,6 @@ from adafruit_neotrellis.neotrellis import NeoTrellis
 from Colors import RED, GREEN, BLUE, WHITE, OFF
 from dataclasses import dataclass
 from time import sleep
-from playsound import playsound
 # freesound_community-hard-slap-46388.mp3
 @dataclass
 class WinningRow:
@@ -18,6 +17,7 @@ class WinningRow:
 
 class ConnectFour:
     def __init__(self, board: typing.Optional[AbstractNeoTrellisGame] = None):
+        # This defines the hardware interface
         self.board = board if board is not None else NeoTrellisGame()
         super().__init__()
         self.width = 8
@@ -26,7 +26,23 @@ class ConnectFour:
         self.reset_game()
         self.register_callbacks()
 
-    def reset_game(self):
+    def reset_game(self, animate=False):
+        if animate:
+            for decrement in range(self.height + 1):
+                for col in range(self.width):
+                    for row in range(self.height):
+                        if row - decrement < 0:
+                            self.board.set_cell_color(col, row + 2, OFF)
+                        else:
+                            self.board.set_cell_color(col, row + 2, self.get_color(self.game_state[row - decrement][col]))
+                self.board.update_display()
+                sleep(0.05)
+                self.board.play_sound("slap.mp3")
+            
+            self.board.clear_keypad_buffer()
+        else:
+            self.board.clear_board()
+
         self.game_state = [] # multi-dimensional list
         for i in range(self.height):
             self.game_state.append([0] * self.width) 
@@ -35,9 +51,6 @@ class ConnectFour:
         self.current_player = 1
         self.game_ended = False
         self.top_row(RED)
-        for col in range(self.width):
-            for row in range(2, 2 + self.height):
-                self.board.set_cell_color(col, row, OFF)
         self.board.update_display()
 
     def top_row(self, color):
@@ -52,10 +65,15 @@ class ConnectFour:
             self.board.activate_key(col, 0, Action.BUTTON_PRESSED) # Even though the callback is set, if the key is not enabled it will not be run. This is how you enable
   
     def current_color(self):
-        if self.current_player == 1:
+        return self.get_color(self.current_player)
+    
+    def get_color(self, player):
+        if player == 1:
             return RED
-        else:
+        elif player == 2:
             return BLUE
+        else:
+            return OFF
 
     def handle_button_event(self, x: int, y: int, action: Action):
         """
@@ -66,11 +84,12 @@ class ConnectFour:
         if Action.BUTTON_PRESSED:
             if self.game_ended:
                 if x == self.width - 1:
-                    self.reset_game()
+                    self.reset_game(True)
                 return
             
             result = self.place_piece(x)
             if result is None:
+                self.board.play_sound("error.mp3")
                 return
             
             # No win
@@ -85,12 +104,14 @@ class ConnectFour:
 
                 if len(result) > 0:
                     self.top_row(color)
+                    self.board.play_sound("cheer.mp3")
                 else:
                     col = 0
                     while col < 6:
                         self.board.set_cell_color(col, 0, RED)
                         self.board.set_cell_color(col + 1, 0, BLUE)
                         col += 2
+                    self.board.play_sound("aww.mp3")
                 
                 self.board.set_cell_color(6, 0, OFF)
                 self.board.set_cell_color(7, 0, GREEN)
@@ -131,6 +152,8 @@ class ConnectFour:
             sleep(0.05)
             y += 1
 
+        self.board.play_sound("slap.mp3")
+
         self.board.clear_keypad_buffer()
 
         return self.check_win(col, row)
@@ -142,16 +165,8 @@ class ConnectFour:
             self.current_player = 1
         self.top_row(self.current_color())
 
-    def show_current_player(self):
-        #TODO: Function to indicate on the board which player is currently placing a piece
-        pass
-
     def is_board_full(self):
         return self.num_placed >= self.width * self.height
-
-    def get_player_color(self, player) -> tuple[int, int, int]:
-        #TODO: Return the color for the given player 
-        pass
 
     def check_win(self, x: int, y: int):
         directions = [
