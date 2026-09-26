@@ -6,7 +6,8 @@ from adafruit_neotrellis.neotrellis import NeoTrellis
 from Colors import RED, GREEN, BLUE, WHITE, OFF
 from dataclasses import dataclass
 from time import sleep
-
+from playsound import playsound
+# freesound_community-hard-slap-46388.mp3
 @dataclass
 class WinningRow:
     startX: int
