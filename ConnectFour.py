@@ -13,10 +13,11 @@ class ConnectFour:
         self.height = 6 # 8x6 board
         self.game_state = [] # multi-dimensional list
         for i in range(self.height):
-            self.game_state = [0] * self.width 
+            self.game_state.append([0] * self.width) 
         self.column_heights = [0] * self.width
         self.num_placed = 0
         self.current_player = 1
+        self.register_callbacks()
 
     def reset_game(self):
         #TODO reset the game state to its original empty state
@@ -24,8 +25,9 @@ class ConnectFour:
 
     def register_callbacks(self):
         #TODO: Register callbacks that will be run when buttons are pressed and released
-        self.board.set_callback(0, 0, self.handle_button_event) # Example of how to register a callback (function) for button 0, 0. Must be done for every button that runs a function
-        self.board.activate_key(0, 0, Action.BUTTON_PRESSED) # Even though the callback is set, if the key is not enabled it will not be run. This is how you enable
+        for col in range(8):
+            self.board.set_callback(col, 0, self.handle_button_event) # Example of how to register a callback (function) for button 0, 0. Must be done for every button that runs a function
+            self.board.activate_key(col, 0, Action.BUTTON_PRESSED) # Even though the callback is set, if the key is not enabled it will not be run. This is how you enable
 
         pass
   
@@ -35,8 +37,9 @@ class ConnectFour:
         See NeoTrellisGame.set_callback() for info about callbacks.
         """
         #TODO: Implement what will happen when the button at position x,y is pressed or released
-  
-        pass
+        if Action.BUTTON_PRESSED:
+            if self.place_piece(x):
+                self.switch_player()
 
     # Returns -1 if row is full.
     def find_lowest_empty_row(self, col: int):
@@ -47,13 +50,15 @@ class ConnectFour:
         row = self.find_lowest_empty_row(col)
         if row == -1:
             return False
-        self.gamestate[col][row] = self.current_player
+        self.game_state[row][col] = self.current_player
         self.column_heights[col] += 1
         self.num_placed += 1
         if self.current_player == 1:
-            set_cell_color(self, col, row, RED) # turns the color of the latest placed square to red for player 1
+            self.board.set_cell_color(col, row + 2, RED) # turns the color of the latest placed square to red for player 1
+            self.board.update_display()
         if self.current_player == 2:
-            set_cell_color(self, col, row, BLUE) # turns the color of the latest placed square to blue for player 2
+            self.board.set_cell_color(col, row + 2, BLUE) # turns the color of the latest placed square to blue for player 2
+            self.board.update_display()
         return True
 
     def switch_player(self):
