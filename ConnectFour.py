@@ -47,17 +47,31 @@ class ConnectFour:
         """
         #TODO: Implement what will happen when the button at position x,y is pressed or released
         if Action.BUTTON_PRESSED:
-            if self.game_ended and x == self.width - 1:
-                self.reset_game()
+            if self.game_ended:
+                if x == self.width - 1:
+                    self.reset_game()
                 return
             
             result = self.place_piece(x)
             if result == 1:
                 self.switch_player()
+            
             if self.is_board_full() or result == 2:
                 self.game_ended = True
-                self.top_row(OFF)
-                self.board.set_cell_color(self.width - 1, 0, GREEN)
+                if result == 2:
+                    if self.current_player == 1:
+                        self.top_row(RED)
+                    else:
+                        self.top_row(BLUE)
+                else:
+                    col = 0
+                    while col < 6:
+                        self.board.set_cell_color(col, 0, RED)
+                        self.board.set_cell_color(col + 1, 0, BLUE)
+                        col += 2
+                
+                self.board.set_cell_color(6, 0, OFF)
+                self.board.set_cell_color(7, 0, GREEN)
                 self.board.update_display()
 
     # Returns -1 if row is full.
